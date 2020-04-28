@@ -29,7 +29,7 @@ public class ClientWindow extends JFrame {
     // конструктор
     public ClientWindow() {
         onStart();
-        onCreateView();
+        createGUI();
         createListeners();
         setVisible(true);
     }
@@ -56,7 +56,7 @@ public class ClientWindow extends JFrame {
         }
     }
     
-    void onCreateView() {
+    void createGUI() {
         // Задаём настройки элементов на форме
         setBounds(600, 150, 600, 500);
         setTitle("Client");
@@ -116,12 +116,12 @@ public class ClientWindow extends JFrame {
             fin.read(buffer, 0, size);
             String[] contacts = new String(buffer, "Cp1251").split(",");
             
-            Vector<String> big = new Vector<String>();
+            Vector<String> list = new Vector<String>();
             for (int i=0; i < contacts.length; i++) {
-                big.add(contacts[i]);
+                list.add(contacts[i]);
                 System.out.println(contacts[i]);
             }
-            JList<String> listContacts = new JList<String>(big);
+            JList<String> listContacts = new JList<String>(list);
 
             panel.add(new JScrollPane(listContacts), BorderLayout.CENTER);
         } catch(IOException ex) {
@@ -159,7 +159,7 @@ public class ClientWindow extends JFrame {
         bAdd.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendData("get", "contacts", "");
+                sendData("get", "contacts", "-");
             }
         });
         
@@ -190,12 +190,25 @@ public class ClientWindow extends JFrame {
             @Override
             public void run() {
                 try {
-                    System.out.println("Соединение с сервером установлено.");
+                    System.out.println("Соединение с сервером установлено");
                     while (true) {
-                        // если есть входящее сообщение
-                        if (inMessage.hasNext()) {
-                            String message = inMessage.nextLine();
-                            System.out.println("Сообщение сервера: " + message);
+                        String[] msg = inMessage.nextLine().split("#");
+                    
+                        if (msg[0].equals("exit")) {
+                            System.err.println("Связь с сервером прекратилась");
+                            break;
+                        } else {
+                            switch(msg[0]) {
+                                case "msg":
+                                    msg_handlers(msg[1], msg[2]);
+                                    break;
+                                case "post":
+                                    post_handlers(msg[1], msg[2]);
+                                    break;
+                                default:
+                                    System.out.println(msg[0] + msg[1] + msg[2]);
+                                    break;
+                            }
                         }
                     }
                 } catch (IllegalStateException ex) {
@@ -207,6 +220,42 @@ public class ClientWindow extends JFrame {
         }).start();
     }
 
+    void msg_handlers(String param, String data) {
+        switch(param) {
+            case "msg":
+                
+                break;
+            default:
+                System.out.println("Message eror from server " + param + "|" + data);
+                break;
+        }
+    }
+    
+    void post_handlers(String param, String data) {
+        switch(param) {
+            case "contacts":
+                /*String[] contacts = data.split(",");
+                JFrame frame = new JFrame("Название окна");
+                frame.setSize(180,250);  
+                frame.setVisible(true);
+                Vector<String> list = new Vector<String>();
+                for (int i=0; i < contacts.length; i++) {
+                    list.add(contacts[i]);
+                }
+                JList<String> listContacts = new JList<String>(list);
+                frame.add(listContacts);*/
+                ContactsDialog dialog = new ContactsDialog(this, data);
+                dialog.setVisible(true);
+                break;
+            case "message":
+                
+                break;
+            default:
+                System.err.println("message eror");
+                break;
+        }
+    }
+    
     public void sendData(String type, String param, String data) {
         try {
             String message = type + "#" + param + "#" + data;

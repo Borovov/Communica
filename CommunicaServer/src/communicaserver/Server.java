@@ -1,9 +1,12 @@
 package communicaserver;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +32,7 @@ public class Server extends JFrame {
             serverSocket = new ServerSocket(PORT);
             System.out.println("Сервер запущен!");
             
+            onStart();
             createGUI();
             setVisible(true);
             tableListener();
@@ -50,6 +54,28 @@ public class Server extends JFrame {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+        }
+    }
+    
+    void onStart() {
+        try {
+            if (!Files.exists(Paths.get("data"))) {
+                File dir = new File("data");
+                dir.mkdir();
+                System.out.println("Директория data создана");
+            }
+            
+            if (!Files.exists(Paths.get("data/contacts.txt"))) {
+                new File("data/contacts.txt").createNewFile();
+                System.out.println("Файл contacts.txt создан");  
+            }
+            
+            if (!Files.exists(Paths.get("data/settings.txt"))) {
+                new File("data/settings.txt").createNewFile();
+                System.out.println("Файл settings.txt создан");
+            }
+        } catch(IOException ex) {
+                
         }
     }
 

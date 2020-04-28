@@ -1,4 +1,5 @@
 package communicaserver;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -32,40 +33,82 @@ public class Handler implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("Новый клиент в сети.");
+            System.out.println(name + " в сети.");
             // Слушаем клиента
             while (true) {
                 if (inMessage.hasNext()) {
-                    //String[] mes = inMessage.nextLine().split("#");
-                    System.out.println(inMessage.nextLine() + "");
+                    String[] msg = inMessage.nextLine().split("#");
                     
-                    /*if (mes[0].equals("exit")) {
+                    if (msg[0].equals("exit")) {
                         System.out.println(name + " покинул сеть.");
                         break;
                     } else {
-                        switch(Integer.valueOf(mes[0])) {
-                            case 101:
-                                
+                        switch(msg[0]) {
+                            case "msg":
+                                msg_handlers(msg[1], msg[2]);
                                 break;
-                            case 102:
-
+                            case "get":
+                                get_handlers(msg[1], msg[2]);
+                                break;
+                            default:
+                                System.out.println(name + ": " + msg[0] + msg[1] + msg[2]);
                                 break;
                         }
-                    }*/
+                    }
                 }
                 //Thread.sleep(100);
             }
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(null, "Неверный формат введённых значений");
+            //JOptionPane.showMessageDialog(null, "Неверный формат введённых значений");
         } finally {
             this.close();
         }
     }
     
-    public void sendData(String msg) {
+    void msg_handlers(String param, String data) {
+        switch(param) {
+            case "msg":
+                
+                break;
+            case "get":
+                
+                break;
+            default:
+                System.out.println("Message eror from " + name + param + "|" + data);
+                break;
+        }
+    }
+    
+    void get_handlers(String param, String data) {
+        switch(param) {
+            case "contacts":
+                try {
+                    FileInputStream fin = new FileInputStream("data/contacts.txt");
+                    int size = fin.available();
+                    if (size != 0) {
+                        byte[] buffer = new byte[size];
+                        fin.read(buffer, 0, size);
+                        String contacts = new String(buffer, "Cp1251");
+                        sendData("post", "contacts", contacts);
+                    }
+                } catch(IOException ex) {
+                    
+                }
+                break;
+            case "anything":
+                
+                break;
+            default:
+                System.out.println(name + ": message eror");
+                break;
+        }
+    }
+    
+    public void sendData(String type, String param, String data) {
         try {
-            outMessage.println(msg);
-            outMessage.flush();
+            String message = type + "#" + param + "#" + data;
+            outMessage.println(message);
+            outMessage.flush();            
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -78,7 +121,6 @@ public class Handler implements Runnable {
                 server.removeClient(i);
                 break;
             }
-        }
-        
+        }        
     }
 }
